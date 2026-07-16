@@ -37,6 +37,35 @@ commands, export an `x.com` cookies JSON file, provide its local path, safely
 back up the generated wallet, and fund its public address with enough UNIT0 for
 gas. Those security-sensitive steps are intentionally not silent.
 
+## One-prompt setup on macOS
+
+Install [ChatGPT Desktop](https://chatgpt.com/download/), select **Codex**, open
+any local folder, and send this prompt:
+
+```text
+Set up Xyper Market Agent on this macOS computer from
+https://github.com/yochabar/xyper-market-agent.
+
+Register that repository as a Codex plugin marketplace and install the
+xyper-market-agent plugin. Then use its setup-xyper-agent skill in this same
+task. If a newly installed skill is not loaded yet, clone the repository to a
+temporary folder, read
+.agents/plugins/plugins/xyper-market-agent/skills/setup-xyper-agent/SKILL.md,
+and follow it directly without asking me to start another chat.
+
+Install required local dependencies after asking for approval, including a
+local portable Node.js runtime when needed. Do not require Homebrew, sudo,
+Python, Docker, or a VPS. Create a protected Unit Zero EVM wallet, register my
+Xyper Market account, and guide me through X verification. Ask only for the
+local path to my exported x.com cookies JSON file; never ask me to paste
+cookies, a mnemonic, or a private key into chat. Continue until the account is
+verified, then show active campaigns and rewards.
+```
+
+The portable Node.js runtime is downloaded from `nodejs.org`, verified against
+the published SHA-256 checksum, and stored inside the private local agent
+directory. An existing compatible Node.js installation is reused.
+
 ## Manual plugin installation
 
 ```text
@@ -44,10 +73,16 @@ codex plugin marketplace add yochabar/xyper-market-agent
 codex plugin add xyper-market-agent@xyper-market
 ```
 
-Start a new Codex task after manual installation and ask:
+Start a new Codex task after manual installation and ask on Windows:
 
 ```text
 Use $setup-xyper-agent-windows to set up my local Xyper Market agent.
+```
+
+Or on macOS:
+
+```text
+Use $setup-xyper-agent to set up my local Xyper Market agent on macOS.
 ```
 
 ## Repository layout
@@ -55,7 +90,7 @@ Use $setup-xyper-agent-windows to set up my local Xyper Market agent.
 - `.agents/plugins/marketplace.json` — Codex marketplace catalog.
 - `.agents/plugins/plugins/xyper-market-agent` — plugin manifest and skills.
 - `setup-xyper-agent-windows` — one-prompt Windows workflow.
-- `setup-xyper-agent` — local macOS workflow.
+- `setup-xyper-agent` — one-prompt macOS workflow with portable Node.js.
 
 ## Security
 

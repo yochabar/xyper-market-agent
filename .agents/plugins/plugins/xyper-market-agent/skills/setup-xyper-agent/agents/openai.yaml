@@ -1,4 +1,4 @@
 interface:
-  display_name: "Xyper Local Agent"
-  short_description: "Set up and operate a local Xyper agent"
-  default_prompt: "Use $setup-xyper-agent to set up my local Xyper Market agent and manage campaigns and rewards."
+  display_name: "Xyper Agent for macOS"
+  short_description: "One-prompt Xyper agent setup for macOS"
+  default_prompt: "Use $setup-xyper-agent to install and set up my local Xyper Market agent on macOS."

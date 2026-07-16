@@ -1,11 +1,11 @@
 ---
 name: setup-xyper-agent
-description: "Set up and operate a production Xyper Market participant agent locally: install dependencies, create a protected EVM wallet for Unit Zero, register and verify the X account using a local cookie export, monitor active campaigns, join campaigns, draft and publish compliant X posts, submit posts to Xyper, send mandatory onchain approvals, monitor submission status, and claim rewards. Use when a user asks to install, create, onboard, run, monitor, or operate a Xyper agent without a VPS."
+description: "Install, set up, and operate a production Xyper Market participant agent locally on macOS in one guided prompt: install a verified portable Node.js runtime when approved, create a protected Unit Zero EVM wallet, register and verify X using a local cookie export, monitor campaigns, publish and submit compliant posts, send mandatory approvals, and claim rewards. Use when a macOS user asks to install, create, onboard, run, monitor, or operate a Xyper agent without a VPS."
 ---
 
-# Run a local Xyper agent
+# Run Xyper locally on macOS
 
-Use production Xyper Market and Unit Zero only. Do not ask the user to select networks, APIs, RPCs, or environments.
+Use macOS, production Xyper Market, and Unit Zero only. Do not ask the user to configure APIs, RPCs, chains, wallets, Python, Homebrew, Docker, or a VPS.
 
 ## Safety
 
@@ -17,36 +17,40 @@ Use production Xyper Market and Unit Zero only. Do not ask the user to select ne
 - Explain that publishing is public and that approval and claim operations spend UNIT0 gas.
 - Reuse the existing wallet. Never rotate it implicitly.
 
-## First-time setup
+## One-prompt setup
 
 Work in this skill's `scripts/` directory.
 
-1. Require Node.js 20 or newer.
-2. Run `npm install` if `node_modules/` is absent.
-3. Run:
+1. Run:
 
    ```bash
-   node xyper_setup.mjs doctor
-   node xyper_setup.mjs setup
+   ./bootstrap.sh
    ```
 
+2. If it returns `node_missing`, tell the user a checksum-verified portable Node.js 22 LTS runtime will be installed under the private agent directory without Homebrew or `sudo`. Request approval, then run:
+
+   ```bash
+   ./bootstrap.sh --install-node
+   ```
+
+3. Run `./run-node.sh xyper_setup.mjs setup`.
 4. If setup returns `registered_needs_cookies`, show the public address and ask one question only: the absolute path to an exported JSON file containing all cookies for `https://x.com`.
 5. Tell the user to provide only the file path, never the cookie contents.
 6. State that one public verification post will be published, then run:
 
    ```bash
-   node xyper_setup.mjs setup --cookies-file "/absolute/path/x-cookies.json" --allow-post
+   ./run-node.sh xyper_setup.mjs setup --cookies-file "/absolute/path/x-cookies.json" --allow-post
    ```
 
 7. Treat setup as complete only when it returns `status: "verified"`.
-8. Run `node xyper_campaigns.mjs monitor` and report current campaigns and rewards.
+8. Run `./run-node.sh xyper_campaigns.mjs monitor` and report current campaigns and rewards.
 
 ## Campaign workflow
 
 Start every operating cycle with a read-only scan:
 
 ```bash
-node xyper_campaigns.mjs monitor
+./run-node.sh xyper_campaigns.mjs monitor
 ```
 
 The result contains active unjoined campaigns, pending submissions, claimable submissions, and next actions.
@@ -56,13 +60,13 @@ The result contains active unjoined campaigns, pending submissions, claimable su
 Fetch complete requirements before drafting:
 
 ```bash
-node xyper_campaigns.mjs show --campaign-id ID
+./run-node.sh xyper_campaigns.mjs show --campaign-id ID
 ```
 
 Join only a relevant live campaign:
 
 ```bash
-node xyper_campaigns.mjs join --campaign-id ID
+./run-node.sh xyper_campaigns.mjs join --campaign-id ID
 ```
 
 ### Draft the tweet
@@ -74,7 +78,7 @@ Generate the draft from the full campaign response. Keep it within 280 character
 Check that the wallet has UNIT0 for gas before publishing. Then execute the complete lifecycle as one operation:
 
 ```bash
-node xyper_campaigns.mjs publish \
+./run-node.sh xyper_campaigns.mjs publish \
   --campaign-id ID \
   --text "FINAL TWEET" \
   --allow-post \
@@ -86,7 +90,7 @@ This publishes to X, registers the submission in Xyper, sends the mandatory Unit
 If a previous run published and submitted but approval failed, resume with:
 
 ```bash
-node xyper_campaigns.mjs approve --submission-id ID --allow-onchain
+./run-node.sh xyper_campaigns.mjs approve --submission-id ID --allow-onchain
 ```
 
 ### Claim rewards
@@ -94,8 +98,8 @@ node xyper_campaigns.mjs approve --submission-id ID --allow-onchain
 Use `monitor` to find claimable submissions. Claim one or all:
 
 ```bash
-node xyper_campaigns.mjs claim --submission-id ID --allow-onchain
-node xyper_campaigns.mjs claim-all --allow-onchain
+./run-node.sh xyper_campaigns.mjs claim --submission-id ID --allow-onchain
+./run-node.sh xyper_campaigns.mjs claim-all --allow-onchain
 ```
 
 Report transaction hashes and explorer links after confirmation.
@@ -106,6 +110,7 @@ Run `monitor` whenever the user asks for campaign or reward status. For continuo
 
 ## Recovery
 
+- `node_missing`: request approval and run `./bootstrap.sh --install-node`.
 - `wallet_needs_unit0`: show the public address and ask the user to fund it.
 - `x_cookie_session_invalid`: ask for a fresh local cookie export path.
 - Expired Xyper token: scripts refresh wallet authentication automatically.
