@@ -8,7 +8,7 @@
       "name": "xyper-market-agent",
       "source": {
         "source": "local",
-        "path": "./plugins/xyper-market-agent"
+        "path": "./.agents/plugins/plugins/xyper-market-agent"
       },
       "policy": {
         "installation": "AVAILABLE",
