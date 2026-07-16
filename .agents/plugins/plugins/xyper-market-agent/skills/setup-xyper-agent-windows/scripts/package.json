@@ -1,0 +1,17 @@
+{
+  "name": "setup-xyper-agent-windows",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "doctor": "node xyper_agent.mjs doctor",
+    "monitor": "node xyper_agent.mjs monitor",
+    "dry-run": "node xyper_agent.mjs setup --dry-run"
+  },
+  "dependencies": {
+    "@scure/bip39": "^1.6.0",
+    "agent-twitter-client": "0.0.18",
+    "viem": "^2.55.2"
+  }
+}

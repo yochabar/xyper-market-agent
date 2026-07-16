@@ -1,0 +1,11 @@
+{
+  "xyperApiBase": "https://api.xyper.market",
+  "xyperAppBaseUrl": "https://xyper.market",
+  "network": {
+    "name": "Unit Zero Mainnet",
+    "chainId": 88811,
+    "currencySymbol": "UNIT0",
+    "rpcUrl": "https://rpc.unit0.dev",
+    "explorerUrl": "https://explorer.unit0.dev"
+  }
+}

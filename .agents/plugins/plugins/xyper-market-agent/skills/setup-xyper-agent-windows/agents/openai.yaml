@@ -1,0 +1,4 @@
+interface:
+  display_name: "Xyper Agent for Windows"
+  short_description: "One-prompt Xyper agent setup for Windows"
+  default_prompt: "Use $setup-xyper-agent-windows to install and set up my local Xyper Market agent on Windows."

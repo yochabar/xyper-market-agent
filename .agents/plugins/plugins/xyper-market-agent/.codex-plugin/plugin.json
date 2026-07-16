@@ -1,0 +1,28 @@
+{
+  "name": "xyper-market-agent",
+  "version": "1.0.0",
+  "description": "Set up and operate a local Xyper Market participant agent on Windows or macOS.",
+  "author": {
+    "name": "Xyper Market",
+    "url": "https://github.com/yochabar"
+  },
+  "homepage": "https://xyper.market",
+  "repository": "https://github.com/yochabar/xyper-market-agent",
+  "keywords": ["xyper", "unit-zero", "evm", "x", "campaigns", "rewards"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Xyper Market Agent",
+    "shortDescription": "Set up a local campaign agent in one guided prompt.",
+    "longDescription": "Creates a protected Unit Zero EVM wallet, verifies X via a local cookie export, monitors Xyper campaigns, publishes and submits compliant posts, and claims rewards.",
+    "developerName": "Xyper Market",
+    "category": "Productivity",
+    "capabilities": ["Local execution", "Campaign monitoring", "Onchain transactions"],
+    "websiteURL": "https://xyper.market",
+    "defaultPrompt": [
+      "Set up my Xyper Market agent on this computer.",
+      "Show active Xyper campaigns and my rewards.",
+      "Resume my Xyper agent from its last safe step."
+    ],
+    "brandColor": "#7C3AED"
+  }
+}
