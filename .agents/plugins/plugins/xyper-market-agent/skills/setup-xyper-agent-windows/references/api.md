@@ -4,6 +4,10 @@ Fixed production configuration: Xyper API `https://api.xyper.market`, Unit Zero 
 
 Lifecycle:
 
+`cookies-check` first imports the cookie export and verifies locally that
+unexpired `auth_token` and `ct0` values are present. It does not call the
+retired Twitter `verify_credentials` or guest-token endpoints.
+
 1. `/api/agent/v1/auth/wallet/nonce/` → EIP-712 signature → `/auth/wallet/verify/`.
 2. `/social/x/link/start/` → proof tweet → `/social/x/link/complete/` → status polling.
 3. `/campaigns/?status=live&joined=false&chainId=88811` → campaign review → `/campaigns/<id>/join/`.
@@ -20,3 +24,7 @@ Private state:
 - `%LOCALAPPDATA%\XyperMarketAgent\operation.json`
 
 The directory ACL permits the current user and SYSTEM only.
+
+Xyper HTTP 5xx responses are classified as `xyper_service_unavailable` and do
+not invalidate private state. An X session is classified as rejected only when
+the actual publish request returns HTTP 401.

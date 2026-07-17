@@ -12,6 +12,10 @@ The script validates the RPC chain ID and checks that Xyper's public `/api/agent
 
 ## Wallet and X verification
 
+Before this lifecycle, `cookies-check` imports the cookie export and verifies
+locally that unexpired `auth_token` and `ct0` values are present. It does not
+call the retired Twitter `verify_credentials` or guest-token endpoints.
+
 1. `POST /api/agent/v1/auth/wallet/nonce/`
 2. Sign returned EIP-712 typed data.
 3. `POST /api/agent/v1/auth/wallet/verify/`
@@ -54,3 +58,7 @@ Default directory: `~/.xyper-market-agent`.
 - `wallet.json`: mnemonic and address; mode `600`.
 - `session.json`: Xyper session and verification state; mode `600`.
 - `x-cookies.json`: live X session cookies; mode `600`.
+
+Xyper HTTP 5xx responses are classified as `xyper_service_unavailable` and do
+not invalidate this state. An X session is classified as rejected only when the
+actual publish request returns HTTP 401.

@@ -73,6 +73,19 @@ codex plugin marketplace add yochabar/xyper-market-agent
 codex plugin add xyper-market-agent@xyper-market
 ```
 
+### Update an existing installation
+
+```text
+codex plugin marketplace upgrade xyper-market
+codex plugin add xyper-market-agent@xyper-market
+```
+
+The update reuses the existing local wallet, Xyper registration, and private
+state. Cookie exports are now checked locally for the required unexpired
+`auth_token` and `ct0` cookies. A temporary Xyper or Cloudflare 5xx response is
+reported as a service outage and no longer causes repeated cookie-export
+requests. The plugin never modifies installed files under `node_modules`.
+
 Start a new Codex task after manual installation and ask on Windows:
 
 ```text

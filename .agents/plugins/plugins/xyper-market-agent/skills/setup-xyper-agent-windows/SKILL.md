@@ -12,6 +12,7 @@ Use Windows 10/11, PowerShell, production Xyper Market, and Unit Zero Mainnet on
 - Store state under `%LOCALAPPDATA%\XyperMarketAgent` with inheritance disabled and access limited to the current Windows user and SYSTEM.
 - Never ask the user to paste cookies, mnemonic, or private key into chat.
 - Request only the local path to an exported X cookies JSON file.
+- Never edit or patch files under `node_modules`; keep compatibility fixes in this skill's bundled source.
 - Show the exact tweet before publishing unless automatic posting was explicitly authorized.
 - Explain that publishing is public and onchain approval/claim spends UNIT0 gas.
 - Reuse state and run `resume` after interruption. Never rotate a wallet implicitly.
@@ -35,13 +36,20 @@ Work in this skill's `scripts` directory.
 3. Run `node .\xyper_agent.mjs setup`.
 4. When it returns `registered_needs_cookies`, show the public address and ask one question: the absolute Windows path to an exported JSON file containing all cookies for `https://x.com`.
 5. Tell the user to provide the path only, never cookie contents.
-6. State that one public verification post will be published, then run:
+6. Validate and import the export locally without contacting X:
 
    ```powershell
-   node .\xyper_agent.mjs setup --cookies-file "C:\Users\User\Downloads\x-cookies.json" --allow-post
+   node .\xyper_agent.mjs cookies-check --cookies-file "C:\Users\User\Downloads\x-cookies.json"
    ```
 
-7. Treat setup as complete only at `status: "verified"`. Then run `node .\xyper_agent.mjs monitor`.
+   `status: "cookies_ready"` means the required, unexpired cookies were imported. It does not publish a post and it must not be replaced with the deprecated Twitter `verify_credentials` check.
+7. State that one public verification post will be published, then run:
+
+   ```powershell
+   node .\xyper_agent.mjs setup --allow-post
+   ```
+
+8. Treat setup as complete only at `status: "verified"`. Then run `node .\xyper_agent.mjs monitor`.
 
 ## Campaign operations
 
@@ -78,7 +86,10 @@ For recurring monitoring, use the host's scheduler/automation to invoke `monitor
 
 - `node_missing`: approve bootstrap with `-InstallNode`.
 - `wallet_needs_unit0`: fund the returned public address and retry.
-- `x_cookie_session_invalid`: request a new cookie export path.
+- `cookies_missing_required_cookie:*` or `cookies_required_cookie_expired:*`: ask for one fresh local cookie export path.
+- `x_cookie_session_rejected:http_401_during_post`: X rejected the actual publish request; ask for one fresh export from the currently signed-in browser session.
+- `x_post_forbidden:http_403`: report that X refused the publish request; do not assume another cookie export will fix an account restriction.
+- `xyper_service_unavailable:http_5xx`: report a temporary Xyper/Cloudflare outage, preserve the wallet, session, and imported cookies, and retry later. Never blame the cookie file or request repeated exports for this error.
 - `operation_pending`: use `resume`.
 - Pending validation: run `monitor` later.
 

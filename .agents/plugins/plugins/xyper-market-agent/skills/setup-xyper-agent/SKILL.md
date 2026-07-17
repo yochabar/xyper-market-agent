@@ -12,6 +12,7 @@ Use macOS, production Xyper Market, and Unit Zero only. Do not ask the user to c
 - Keep wallet material, X cookies, and Xyper tokens on the user's computer.
 - Never ask the user to paste cookies, a mnemonic, or a private key into chat.
 - Import cookies from a local JSON file into the private state directory.
+- Never edit or patch files under `node_modules`; keep compatibility fixes in this skill's bundled source.
 - Never reveal wallet secrets unless the user explicitly requests a backup or export.
 - Show the exact campaign tweet before publishing unless the user explicitly pre-authorized automatic publishing.
 - Explain that publishing is public and that approval and claim operations spend UNIT0 gas.
@@ -36,14 +37,21 @@ Work in this skill's `scripts/` directory.
 3. Run `./run-node.sh xyper_setup.mjs setup`.
 4. If setup returns `registered_needs_cookies`, show the public address and ask one question only: the absolute path to an exported JSON file containing all cookies for `https://x.com`.
 5. Tell the user to provide only the file path, never the cookie contents.
-6. State that one public verification post will be published, then run:
+6. Validate and import the export locally without contacting X:
 
    ```bash
-   ./run-node.sh xyper_setup.mjs setup --cookies-file "/absolute/path/x-cookies.json" --allow-post
+   ./run-node.sh xyper_setup.mjs cookies-check --cookies-file "/absolute/path/x-cookies.json"
    ```
 
-7. Treat setup as complete only when it returns `status: "verified"`.
-8. Run `./run-node.sh xyper_campaigns.mjs monitor` and report current campaigns and rewards.
+   `status: "cookies_ready"` means the required, unexpired cookies were imported. It does not publish a post and it must not be replaced with the deprecated Twitter `verify_credentials` check.
+7. State that one public verification post will be published, then run:
+
+   ```bash
+   ./run-node.sh xyper_setup.mjs setup --allow-post
+   ```
+
+8. Treat setup as complete only when it returns `status: "verified"`.
+9. Run `./run-node.sh xyper_campaigns.mjs monitor` and report current campaigns and rewards.
 
 ## Campaign workflow
 
@@ -112,7 +120,10 @@ Run `monitor` whenever the user asks for campaign or reward status. For continuo
 
 - `node_missing`: request approval and run `./bootstrap.sh --install-node`.
 - `wallet_needs_unit0`: show the public address and ask the user to fund it.
-- `x_cookie_session_invalid`: ask for a fresh local cookie export path.
+- `cookies_missing_required_cookie:*` or `cookies_required_cookie_expired:*`: ask for one fresh local cookie export path.
+- `x_cookie_session_rejected:http_401_during_post`: X rejected the actual publish request; ask for one fresh export from the currently signed-in browser session.
+- `x_post_forbidden:http_403`: report that X refused the publish request; do not assume that another cookie export will fix an account restriction.
+- `xyper_service_unavailable:http_5xx`: report a temporary Xyper/Cloudflare outage, preserve the wallet, session, and imported cookies, and retry later. Never blame the cookie file or request repeated exports for this error.
 - Expired Xyper token: scripts refresh wallet authentication automatically.
 - Failed approval: resume with `approve` and the existing submission ID.
 - Pending validation: wait and run `monitor` later.

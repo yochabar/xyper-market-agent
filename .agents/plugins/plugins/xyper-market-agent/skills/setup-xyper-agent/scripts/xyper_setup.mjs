@@ -201,10 +201,18 @@ async function setup() {
   if (!verified) process.exitCode = 4;
 }
 
+async function checkCookies() {
+  if (!values['cookies-file']) throw new Error('--cookies-file required');
+  const summary = importCookies(values['cookies-file'], paths.cookies);
+  await createLoggedInScraper(paths.cookies);
+  output({ ...publicStatus(), ...summary });
+}
+
 try {
   if (command === 'status') output(publicStatus());
   else if (command === 'doctor') await doctor();
   else if (command === 'setup') await setup();
+  else if (command === 'cookies-check') await checkCookies();
   else throw new Error(`unknown_command:${command}`);
 } catch (error) {
   console.error(JSON.stringify({
