@@ -7,12 +7,21 @@ export async function requestJson(url, {
     const headers = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (token) headers.Authorization = `Bearer ${token}`;
-    const response = await fetch(url, {
-      method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: controller.signal
-    });
+    let response;
+    try {
+      response = await fetch(url, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: controller.signal
+      });
+    } catch (error) {
+      const code = String(error?.cause?.code || error?.code || '').toUpperCase();
+      if (code === 'EACCES' || /\bEACCES\b/i.test(String(error?.message || ''))) {
+        throw new Error(`sandbox_network_blocked:eacces:${new URL(url).hostname}`);
+      }
+      throw error;
+    }
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
       if (service === 'xyper' && response.status >= 500) {

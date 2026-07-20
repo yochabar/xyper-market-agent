@@ -278,6 +278,10 @@ async function fetchRequest(client, url, init = {}) {
     return await client.fetchImpl(url, { ...init, signal: init.signal || controller.signal });
   } catch (error) {
     if (error?.name === 'AbortError') throw new Error('x_request_timeout');
+    const code = String(error?.cause?.code || error?.code || '').toUpperCase();
+    if (code === 'EACCES' || /\bEACCES\b/i.test(String(error?.message || ''))) {
+      throw new Error('sandbox_network_blocked:eacces:x.com');
+    }
     throw error;
   } finally {
     clearTimeout(timeout);
@@ -293,6 +297,17 @@ async function checkCurrentUser(client) {
   client.username = body?.screen_name || body?.user?.screen_name || null;
   client.userId = String(body?.user_id || body?.user_id_str || body?.user?.id_str || body?.user?.id || '') || null;
   return client.username ? { username: client.username, userId: client.userId } : null;
+}
+
+export async function validateCookieSession(client) {
+  const identity = await checkCurrentUser(client);
+  return {
+    status: 'x_session_ready',
+    xSessionValid: true,
+    xUsername: identity?.username || null,
+    xUserId: identity?.userId || null,
+    checkedAt: new Date().toISOString()
+  };
 }
 
 function extractCreateTweetId(source) {

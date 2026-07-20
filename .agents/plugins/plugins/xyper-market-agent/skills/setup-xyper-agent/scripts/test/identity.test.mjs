@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { applyRemoteIdentity, findVerifiedXAccount } from '../lib/identity.mjs';
+import {
+  applyRemoteIdentity,
+  findVerifiedXAccount,
+  synchronizeRemoteIdentity
+} from '../lib/identity.mjs';
 
 test('detects an existing verified X account in the Xyper profile', () => {
   const account = findVerifiedXAccount({
@@ -41,4 +45,26 @@ test('marks the local session as remotely verified without changing its token', 
   assert.equal(result.session.xVerified, true);
   assert.equal(result.session.xUsername, 'alice');
   assert.equal(result.session.xVerificationSource, 'existing_xyper_account');
+});
+
+test('sync clears a stale local verification when Xyper has no linked X account', () => {
+  const result = synchronizeRemoteIdentity({
+    agentSessionToken: 'secret-token',
+    xVerified: true,
+    xUsername: 'stale-user'
+  }, { socialAccounts: [] });
+  assert.equal(result.session.agentSessionToken, 'secret-token');
+  assert.equal(result.session.xVerified, false);
+  assert.equal(result.session.xUsername, null);
+  assert.equal(result.session.xVerificationSource, 'xyper_profile_sync');
+});
+
+test('sync preserves local verification when the profile omits social account state', () => {
+  const result = synchronizeRemoteIdentity({
+    xVerified: true,
+    xUsername: 'known-user'
+  }, { id: 'profile-without-social-fields' });
+  assert.equal(result.authoritative, false);
+  assert.equal(result.session.xVerified, true);
+  assert.equal(result.session.xUsername, 'known-user');
 });

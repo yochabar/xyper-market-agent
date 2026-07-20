@@ -15,6 +15,9 @@ The script validates the RPC chain ID and checks that Xyper's public `/api/agent
 Before this lifecycle, `cookies-check` imports the cookie export and verifies
 locally that unexpired `auth_token` and `ct0` values are present. It does not
 call the retired Twitter `verify_credentials` or guest-token endpoints.
+`sync` then performs a read-only check against X's current signed-in account
+settings endpoint and, when local wallet registration exists, refreshes local
+verification state from `GET /api/agent/v1/me/`. It never publishes a post.
 
 1. `POST /api/agent/v1/auth/wallet/nonce/`
 2. Sign returned EIP-712 typed data.

@@ -53,15 +53,22 @@ Work in this skill's `scripts/` directory.
    ./run-node.sh xyper_setup.mjs cookies-check --cookies-file "/absolute/path/x-cookies.json"
    ```
 
-   `status: "cookies_ready"` means the required, unexpired cookies were imported. It does not publish a post and it must not be replaced with the deprecated Twitter `verify_credentials` check.
-9. State that one public verification post will be published, then run:
+   `status: "cookies_ready"` means the required, unexpired cookies were imported. It does not publish a post and it must not be replaced with the deprecated Twitter `verify_credentials` check. Exports whose relevant cookies use `x.com` or `.x.com` are accepted directly. Never rewrite their domain to `twitter.com`.
+9. Run the read-only live session and Xyper identity sync:
+
+   ```bash
+   ./run-node.sh xyper_setup.mjs sync
+   ```
+
+   `status: "synced"` with `xSession.status: "x_session_ready"` means the cookie session is live. This command does not publish (`posted: false`). If a registered local wallet exists, it also refreshes the local X verification state from `/api/agent/v1/me/`.
+10. State that one public verification post will be published, then run:
 
    ```bash
    ./run-node.sh xyper_setup.mjs setup --allow-post
    ```
 
-10. Treat setup as complete only when it returns `status: "verified"`.
-11. Run `./run-node.sh xyper_campaigns.mjs monitor` and report current campaigns and rewards.
+11. Treat setup as complete only when it returns `status: "verified"`.
+12. Run `./run-node.sh xyper_campaigns.mjs monitor` and report current campaigns and rewards.
 
 ## Campaign workflow
 
@@ -133,6 +140,7 @@ Run `monitor` whenever the user asks for campaign or reward status. For continuo
 - `existing_wallet_state_required`: this is a fresh machine and the existing account's managed-wallet state is absent. Do not generate or register a replacement wallet. Ask the user to restore the dedicated backup locally; never request its secret contents in chat.
 - `existing_x_not_found_for_wallet`: the current managed wallet is not associated with the Xyper user that owns the verified X account. Do not request X cookies or publish a proof post. Restore the previous dedicated managed-wallet state; if none exists, explain that automatic account transfer is unsupported and stop without rotating state.
 - `cookies_missing_required_cookie:*` or `cookies_required_cookie_expired:*`: ask for one fresh local cookie export path.
+- `sandbox_network_blocked:eacces:*`: the local sandbox denied outbound network access. Preserve all state, enable **Full access**, restart ChatGPT Desktop, and retry `sync` in a new local task. Do not describe this as an invalid cookie session.
 - `x_cookie_session_rejected:http_401:phase_session_check`: X rejected the cookie session before publishing. Ask for one fresh export from the currently signed-in `x.com` browser session.
 - `x_cookie_session_rejected:http_401:phase_create_tweet`: the read-only session check passed but X rejected `CreateTweet`. Preserve the current cookie file and report this as a posting-protocol failure; do not send the user through repeated exports.
 - `x_post_failed:http_404:phase_create_tweet`: the client already refreshed X's rotating query ID and tried the generic GraphQL endpoint. Preserve state and report a temporary X web API incompatibility.

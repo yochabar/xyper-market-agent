@@ -25,9 +25,13 @@ import { mnemonicToAccount } from 'viem/accounts';
 import {
   createLoggedInScraper,
   normalizeCookieExport,
-  publishTweet
+  publishTweet,
+  validateCookieSession
 } from '../../setup-xyper-agent/scripts/lib/x_session.mjs';
-import { applyRemoteIdentity } from '../../setup-xyper-agent/scripts/lib/identity.mjs';
+import {
+  applyRemoteIdentity,
+  synchronizeRemoteIdentity
+} from '../../setup-xyper-agent/scripts/lib/identity.mjs';
 
 const [command = 'status', ...rest] = process.argv.slice(2);
 const { values } = parseArgs({
@@ -167,6 +171,12 @@ async function requestJson(url, { method = 'GET', body, token, timeoutMs = 20000
       throw new Error(`${method} ${url} HTTP ${response.status}: ${payload.detail || JSON.stringify(payload)}`);
     }
     return payload;
+  } catch (error) {
+    const code = String(error?.cause?.code || error?.code || '').toUpperCase();
+    if (code === 'EACCES' || /\bEACCES\b/i.test(String(error?.message || ''))) {
+      throw new Error(`sandbox_network_blocked:eacces:${new URL(url).hostname}`);
+    }
+    throw error;
   } finally {
     clearTimeout(timeout);
   }
@@ -480,11 +490,41 @@ async function runCookieCheck() {
   return { ...publicStatus(), ...summary };
 }
 
+async function runSync() {
+  ensureStateDir();
+  const cookieImport = values['cookies-file'] ? importCookies(values['cookies-file']) : null;
+  if (!existsSync(paths.cookies)) throw new Error('x_cookies_not_imported');
+
+  const xSession = await validateCookieSession(await loggedInScraper());
+  let xyperProfileChecked = false;
+  let xyperProfileAuthoritative = null;
+  const localSession = readJson(paths.session, {});
+  if (localSession.agentSessionToken && existsSync(paths.wallet)) {
+    const runtime = await getRuntime();
+    const profile = await apiGet('/api/agent/v1/me/', runtime.token);
+    const synchronized = synchronizeRemoteIdentity(runtime.session, profile);
+    writePrivateJson(paths.session, synchronized.session);
+    xyperProfileChecked = true;
+    xyperProfileAuthoritative = synchronized.authoritative;
+  }
+
+  return {
+    ...publicStatus(),
+    status: 'synced',
+    cookieImport,
+    xSession,
+    xyperProfileChecked,
+    xyperProfileAuthoritative,
+    posted: false
+  };
+}
+
 async function run() {
   if (command === 'doctor') return doctor();
   if (command === 'status') return publicStatus();
   if (command === 'setup') return runSetup();
   if (command === 'cookies-check') return runCookieCheck();
+  if (command === 'sync' || command === 'cookies-sync') return runSync();
   if (values['dry-run']) {
     return {
       status: command === 'monitor' ? 'ok' : 'dry_run',

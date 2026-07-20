@@ -7,6 +7,9 @@ Lifecycle:
 `cookies-check` first imports the cookie export and verifies locally that
 unexpired `auth_token` and `ct0` values are present. It does not call the
 retired Twitter `verify_credentials` or guest-token endpoints.
+Both `x.com` and `.x.com` cookie domains are accepted without rewriting.
+`sync` then performs a read-only X session check and refreshes local Xyper
+verification from `GET /api/agent/v1/me/` when registered; it never publishes.
 
 1. `/api/agent/v1/auth/wallet/nonce/` → EIP-712 signature → `/auth/wallet/verify/`.
 2. `GET /api/agent/v1/me/` → reuse an existing verified X entry from `socialAccounts`/`social_accounts` without cookies or a proof post.
@@ -32,6 +35,7 @@ The directory ACL permits the current user and SYSTEM only.
 Windows host preflight statuses:
 
 - `executable_launch_blocked`: the Codex sandbox cannot start local Windows executables. Select Full access, restart ChatGPT Desktop, and retry in a new local task; use `[windows] sandbox = "elevated"` if the block persists.
+- `sandbox_network_blocked`: executables launch, but outbound HTTPS is denied with EACCES. Preserve state, enable Full access, and retry `sync`; use the elevated sandbox or normal PowerShell if needed.
 - `dependencies_missing`: Git for Windows or Node.js 20+ is missing and requires approval before `winget` installation.
 - `winget_missing`: install Git for Windows and Node.js LTS outside ChatGPT, then restart the app.
 

@@ -7,7 +7,8 @@ import {
   createLoggedInScraper,
   importCookies,
   normalizeCookieExport,
-  publishTweet
+  publishTweet,
+  validateCookieSession
 } from '../lib/x_session.mjs';
 
 function jsonResponse(body, status = 200, headers = {}) {
@@ -47,6 +48,39 @@ test('normalizes exports, prefers x.com cookies, and never stores foreign domain
   assert.equal(values.ct0, 'csrf-current');
   assert.equal(values.ignored, undefined);
   assert.equal(summary.importedCookieCount, 3);
+});
+
+test('accepts an export containing only current x.com domain cookies', () => {
+  const { cookieState } = normalizeCookieExport([
+    { name: 'auth_token', value: 'auth', domain: 'x.com' },
+    { name: 'ct0', value: 'csrf', domain: '.x.com' }
+  ]);
+  assert.deepEqual(cookieState.cookies.map(({ domain }) => domain), ['x.com', 'x.com']);
+});
+
+test('validates the live cookie session without publishing', async () => {
+  const requests = [];
+  const client = await prepareClient(async (url, init = {}) => {
+    requests.push({ url: String(url), method: init.method || 'GET' });
+    return jsonResponse({ screen_name: 'tester', user_id_str: '42' });
+  });
+  const result = await validateCookieSession(client);
+  assert.equal(result.status, 'x_session_ready');
+  assert.equal(result.xUsername, 'tester');
+  assert.equal(result.xUserId, '42');
+  assert.deepEqual(requests, [{ url: 'https://x.com/i/api/account/settings.json', method: 'GET' }]);
+});
+
+test('classifies sandbox EACCES separately from rejected cookies', async () => {
+  const client = await prepareClient(async () => {
+    const error = new Error('fetch failed');
+    error.cause = { code: 'EACCES' };
+    throw error;
+  });
+  await assert.rejects(
+    () => validateCookieSession(client),
+    /sandbox_network_blocked:eacces:x\.com/
+  );
 });
 
 test('accepts the legacy cookie-string state format', () => {

@@ -47,3 +47,35 @@ export function applyRemoteIdentity(session, profile) {
     xAccount
   };
 }
+
+export function synchronizeRemoteIdentity(session, profile) {
+  const applied = applyRemoteIdentity(session, profile);
+  if (applied.xAccount) {
+    return {
+      ...applied,
+      authoritative: true,
+      session: { ...applied.session, xProfileSyncedAt: new Date().toISOString() }
+    };
+  }
+  const hasAuthoritativeSocialList = Array.isArray(profile?.socialAccounts)
+    || Array.isArray(profile?.social_accounts);
+  if (!hasAuthoritativeSocialList) {
+    return {
+      xAccount: null,
+      authoritative: false,
+      session: { ...session, xProfileSyncedAt: new Date().toISOString() }
+    };
+  }
+  return {
+    xAccount: null,
+    authoritative: true,
+    session: {
+      ...session,
+      xVerified: false,
+      xUsername: null,
+      xVerifiedAt: null,
+      xVerificationSource: 'xyper_profile_sync',
+      xProfileSyncedAt: new Date().toISOString()
+    }
+  };
+}

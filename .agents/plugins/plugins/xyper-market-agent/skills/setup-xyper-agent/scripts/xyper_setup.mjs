@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { apiGet, apiPost, registerWallet, verifyRpc, verifyXyper } from './lib/api.mjs';
 import { getConfig } from './lib/config.mjs';
-import { applyRemoteIdentity } from './lib/identity.mjs';
+import { applyRemoteIdentity, synchronizeRemoteIdentity } from './lib/identity.mjs';
 import {
   cookiesPath,
   ensurePrivateDir,
@@ -16,7 +16,12 @@ import {
   walletPath,
   writePrivateJson
 } from './lib/state.mjs';
-import { createLoggedInScraper, importCookies, publishTweet } from './lib/x_session.mjs';
+import {
+  createLoggedInScraper,
+  importCookies,
+  publishTweet,
+  validateCookieSession
+} from './lib/x_session.mjs';
 
 const [command = 'status', ...rest] = process.argv.slice(2);
 const { values } = parseArgs({
@@ -242,11 +247,45 @@ async function checkCookies() {
   output({ ...publicStatus(), ...summary });
 }
 
+async function syncState() {
+  ensurePrivateDir(stateDir);
+  const cookieImport = values['cookies-file']
+    ? importCookies(values['cookies-file'], paths.cookies)
+    : null;
+  if (!existsSync(paths.cookies)) throw new Error('x_cookies_not_imported');
+
+  const xSession = await validateCookieSession(await createLoggedInScraper(paths.cookies));
+  let xyperProfileChecked = false;
+  let xyperProfileAuthoritative = null;
+  const localSession = readJson(paths.session, {});
+  if (localSession.agentSessionToken && existsSync(paths.wallet)) {
+    const expiresAt = Date.parse(localSession.tokenExpiresAt || '');
+    const session = Number.isFinite(expiresAt) && expiresAt > Date.now() + 60000
+      ? localSession
+      : await authenticate(loadOrCreateWallet(stateDir).account, readJson(paths.wallet), false);
+    const profile = await apiGet(config, '/api/agent/v1/me/', session.agentSessionToken);
+    const synchronized = synchronizeRemoteIdentity(session, profile);
+    writePrivateJson(paths.session, synchronized.session);
+    xyperProfileChecked = true;
+    xyperProfileAuthoritative = synchronized.authoritative;
+  }
+
+  output(publicStatus({
+    status: 'synced',
+    cookieImport,
+    xSession,
+    xyperProfileChecked,
+    xyperProfileAuthoritative,
+    posted: false
+  }));
+}
+
 try {
   if (command === 'status') output(publicStatus());
   else if (command === 'doctor') await doctor();
   else if (command === 'setup') await setup();
   else if (command === 'cookies-check') await checkCookies();
+  else if (command === 'sync' || command === 'cookies-sync') await syncState();
   else throw new Error(`unknown_command:${command}`);
 } catch (error) {
   console.error(JSON.stringify({

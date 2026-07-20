@@ -53,6 +53,10 @@ commands, export an `x.com` cookies JSON file, provide its local path, safely
 back up the generated wallet, and fund its public address with enough UNIT0 for
 gas. Those security-sensitive steps are intentionally not silent.
 
+Current releases accept `x.com` and `.x.com` cookie exports directly; users
+must not rewrite them to `twitter.com`. A read-only `sync` command checks the
+live X session and refreshes local Xyper verification state without publishing.
+
 If the executable preflight remains blocked, install the dependencies from a
 normal PowerShell window outside ChatGPT:
 

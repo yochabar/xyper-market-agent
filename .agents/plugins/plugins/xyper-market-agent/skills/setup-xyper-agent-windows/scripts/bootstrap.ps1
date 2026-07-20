@@ -29,6 +29,16 @@ function Stop-ExecutableBlocked {
   }
 }
 
+function Stop-NetworkBlocked {
+  param([string]$Target)
+  Write-Status -ExitCode 6 -Payload @{
+    status = "sandbox_network_blocked"
+    error = "sandbox_network_blocked:eacces:${Target}"
+    target = $Target
+    nextAction = "Select Full access, restart ChatGPT Desktop, open a new local task, and retry. If it persists, configure [windows] sandbox = elevated or run bootstrap.ps1 in normal PowerShell. Preserve the existing wallet and cookie files."
+  }
+}
+
 function Test-ExecutableLaunch {
   $cmd = Join-Path $env:SystemRoot "System32\cmd.exe"
   try {
@@ -135,8 +145,12 @@ if ($LASTEXITCODE -ne 0) { throw "state_acl_failed:${LASTEXITCODE}" }
 
 Push-Location $PSScriptRoot
 try {
-  & npm.cmd install --no-fund --no-audit
-  if ($LASTEXITCODE -ne 0) { throw "npm_install_failed:${LASTEXITCODE}" }
+  $npmOutput = & npm.cmd install --no-fund --no-audit 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    if (($npmOutput -join "`n") -match "\bEACCES\b") { Stop-NetworkBlocked "registry.npmjs.org" }
+    throw "npm_install_failed:${LASTEXITCODE}"
+  }
+  $npmOutput | Write-Output
   & node.exe .\xyper_agent.mjs doctor
   if ($LASTEXITCODE -ne 0) { throw "doctor_failed:${LASTEXITCODE}" }
   if ($DryRun) {
