@@ -19,10 +19,13 @@ call the retired Twitter `verify_credentials` or guest-token endpoints.
 1. `POST /api/agent/v1/auth/wallet/nonce/`
 2. Sign returned EIP-712 typed data.
 3. `POST /api/agent/v1/auth/wallet/verify/`
-4. `POST /api/agent/v1/social/x/link/start/`
-5. Confirm the cookie session through X's current account-settings endpoint, discover the current `CreateTweet` GraphQL query ID from X's public web bundles, and publish proof containing the returned challenge code.
-6. `POST /api/agent/v1/social/x/link/complete/`
-7. Poll `GET /api/agent/v1/social/x/link/status/<id>/`.
+4. `GET /api/agent/v1/me/` and inspect `socialAccounts`/`social_accounts`. If a verified X entry exists, persist it locally and skip all X-linking calls and the proof post.
+5. Otherwise, `POST /api/agent/v1/social/x/link/start/`.
+6. Confirm the cookie session through X's current account-settings endpoint, discover the current `CreateTweet` GraphQL query ID from X's public web bundles, and publish proof containing the returned challenge code.
+7. `POST /api/agent/v1/social/x/link/complete/`.
+8. Poll `GET /api/agent/v1/social/x/link/status/<id>/`.
+
+An existing X link belongs to a Xyper user, and wallet authentication determines that user. A fresh managed wallet must not be assumed to inherit an X link owned by another wallet. `--expect-existing-x` never creates a wallet on a fresh machine: it returns `existing_wallet_state_required`. With an existing managed wallet that has no linked X entry, it returns `existing_x_not_found_for_wallet` before importing cookies or publishing.
 
 ## Campaign lifecycle
 

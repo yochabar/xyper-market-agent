@@ -9,7 +9,10 @@ unexpired `auth_token` and `ct0` values are present. It does not call the
 retired Twitter `verify_credentials` or guest-token endpoints.
 
 1. `/api/agent/v1/auth/wallet/nonce/` → EIP-712 signature → `/auth/wallet/verify/`.
-2. `/social/x/link/start/` → cookie-session check → current `CreateTweet` query-ID discovery → proof tweet → `/social/x/link/complete/` → status polling.
+2. `GET /api/agent/v1/me/` → reuse an existing verified X entry from `socialAccounts`/`social_accounts` without cookies or a proof post.
+3. Only when no X entry exists: `/social/x/link/start/` → cookie-session check → current `CreateTweet` query-ID discovery → proof tweet → `/social/x/link/complete/` → status polling.
+
+`--expect-existing-x` returns `existing_wallet_state_required` instead of creating a wallet on a fresh machine. With a restored managed wallet, it stops before cookie import or posting when that wallet is not associated with the Xyper user that owns the expected X link.
 3. `/campaigns/?status=live&joined=false&chainId=88811` → campaign review → `/campaigns/<id>/join/`.
 4. Publish tweet → `/campaigns/<id>/submissions/`.
 5. `/submissions/<id>/onchain-intent/` → send Unit Zero transaction → `/onchain-confirm/`.

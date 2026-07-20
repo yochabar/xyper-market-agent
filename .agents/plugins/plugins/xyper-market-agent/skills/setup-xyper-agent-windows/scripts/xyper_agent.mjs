@@ -27,6 +27,7 @@ import {
   normalizeCookieExport,
   publishTweet
 } from '../../setup-xyper-agent/scripts/lib/x_session.mjs';
+import { applyRemoteIdentity } from '../../setup-xyper-agent/scripts/lib/identity.mjs';
 
 const [command = 'status', ...rest] = process.argv.slice(2);
 const { values } = parseArgs({
@@ -39,6 +40,7 @@ const { values } = parseArgs({
     'submission-id': { type: 'string', default: '' },
     text: { type: 'string', default: '' },
     'allow-post': { type: 'boolean', default: false },
+    'expect-existing-x': { type: 'boolean', default: false },
     'allow-onchain': { type: 'boolean', default: false },
     'dry-run': { type: 'boolean', default: false }
   },
@@ -381,6 +383,7 @@ function publicStatus() {
     evmAddress: wallet?.address || null,
     xVerified: Boolean(session?.xVerified),
     xUsername: session?.xUsername || null,
+    xVerificationSource: session?.xVerificationSource || null,
     stateDir,
     pendingOperation: readJson(paths.operation)
   };
@@ -388,6 +391,14 @@ function publicStatus() {
 
 async function runSetup() {
   ensureStateDir();
+  if (values['expect-existing-x'] && !existsSync(paths.wallet)) {
+    process.exitCode = 5;
+    return {
+      ...publicStatus(),
+      status: 'existing_wallet_state_required',
+      nextAction: 'Restore the dedicated managed-wallet state already associated with the verified Xyper account, then retry. No wallet was generated and no Xyper account or post was created.'
+    };
+  }
   const { wallet, account, created } = loadWallet({ create: true });
   if (values['dry-run']) {
     writePrivateJson(paths.session, {
@@ -400,7 +411,28 @@ async function runSetup() {
   }
   await doctor();
   const runtime = await getRuntime();
+  const profile = await apiGet('/api/agent/v1/me/', runtime.token);
+  const remoteIdentity = applyRemoteIdentity(runtime.session, profile);
+  if (remoteIdentity.xAccount) {
+    writePrivateJson(paths.session, remoteIdentity.session);
+    return {
+      ...publicStatus(),
+      status: 'verified',
+      walletCreated: created,
+      verificationReused: true,
+      verificationSource: 'existing_xyper_account'
+    };
+  }
   if (runtime.session.xVerified) return { ...publicStatus(), status: 'verified', walletCreated: created };
+  if (values['expect-existing-x']) {
+    process.exitCode = 5;
+    return {
+      ...publicStatus(),
+      status: 'existing_x_not_found_for_wallet',
+      walletCreated: created,
+      nextAction: 'Authenticate with the same Xyper wallet that owns the existing verified X account, or restore that managed wallet state. No verification post was published.'
+    };
+  }
   if (values['cookies-file']) importCookies(values['cookies-file']);
   if (!existsSync(paths.cookies)) {
     return {

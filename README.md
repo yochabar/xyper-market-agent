@@ -1,9 +1,10 @@
 # Xyper Market Agent
 
 A local Codex plugin for setting up and operating a Xyper Market participant
-agent on Windows or macOS. It creates a protected Unit Zero EVM wallet, verifies
-an X account from a local cookie export, monitors campaigns, publishes and
-submits compliant posts, and claims rewards.
+agent on Windows or macOS. It creates or reuses a protected Unit Zero EVM
+wallet, detects an X account already verified in Xyper, otherwise verifies X
+from a local cookie export, monitors campaigns, publishes and submits compliant
+posts, and claims rewards.
 
 Wallet material, X cookies, and Xyper credentials stay on the user's computer.
 The agent uses Xyper Market production and Unit Zero only.
@@ -39,7 +40,9 @@ and follow it directly without asking me to start another chat.
 
 Install required local dependencies after asking for approval, create a
 protected Unit Zero EVM wallet, register my Xyper Market account, and guide me
-through X verification. Ask only for the local path to my exported x.com
+through X verification. First ask whether I already have a verified X account
+in Xyper; if I do, use the protective existing-account flow and do not publish
+another verification post. Ask only for the local path to my exported x.com
 cookies JSON file; never ask me to paste cookies, a mnemonic, or a private key
 into chat. Continue until the Xyper account is verified, then show active
 campaigns and rewards.
@@ -89,8 +92,10 @@ and follow it directly without asking me to start another chat.
 Install required local dependencies after asking for approval, including a
 local portable Node.js runtime when needed. Do not require Homebrew, sudo,
 Python, Docker, or a VPS. Create a protected Unit Zero EVM wallet, register my
-Xyper Market account, and guide me through X verification. Ask only for the
-local path to my exported x.com cookies JSON file; never ask me to paste
+Xyper Market account, and guide me through X verification. First ask whether I
+already have a verified X account in Xyper; if I do, use the protective
+existing-account flow and do not publish another verification post. Ask only
+for the local path to my exported x.com cookies JSON file; never ask me to paste
 cookies, a mnemonic, or a private key into chat. Continue until the account is
 verified, then show active campaigns and rewards.
 ```
@@ -114,7 +119,13 @@ codex plugin add xyper-market-agent@xyper-market
 ```
 
 The update reuses the existing local wallet, Xyper registration, and private
-state. Cookie exports are now checked locally for the required unexpired
+state. Setup now checks Xyper's authenticated profile first: an X account already
+linked to that Xyper user is reused without requesting cookies or publishing a
+new proof post. If the expected X link belongs to another wallet, setup stops
+before generating or registering a replacement wallet, importing cookies, or
+posting. The user must restore the dedicated managed-wallet state associated
+with that Xyper identity; the plugin cannot silently transfer an X link between
+wallets. Cookie exports are now checked locally for the required unexpired
 `auth_token` and `ct0` cookies. A temporary Xyper or Cloudflare 5xx response is
 reported as a service outage and no longer causes repeated cookie-export
 requests. X publishing no longer uses the deprecated
