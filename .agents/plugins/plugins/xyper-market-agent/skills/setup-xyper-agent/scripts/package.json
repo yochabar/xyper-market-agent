@@ -10,11 +10,11 @@
     "doctor": "node xyper_setup.mjs doctor",
     "status": "node xyper_setup.mjs status",
     "monitor": "node xyper_campaigns.mjs monitor",
-    "dry-run": "node xyper_setup.mjs setup --dry-run && node xyper_campaigns.mjs monitor --dry-run"
+    "dry-run": "node xyper_setup.mjs setup --dry-run && node xyper_campaigns.mjs monitor --dry-run",
+    "test": "node --test"
   },
   "dependencies": {
     "@scure/bip39": "^1.6.0",
-    "agent-twitter-client": "0.0.18",
     "viem": "^2.55.2"
   }
 }

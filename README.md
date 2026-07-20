@@ -117,7 +117,10 @@ The update reuses the existing local wallet, Xyper registration, and private
 state. Cookie exports are now checked locally for the required unexpired
 `auth_token` and `ct0` cookies. A temporary Xyper or Cloudflare 5xx response is
 reported as a service outage and no longer causes repeated cookie-export
-requests. The plugin never modifies installed files under `node_modules`.
+requests. X publishing no longer uses the deprecated
+`agent-twitter-client@0.0.18`: the bundled client uses the current signed-in
+`OAuth2Session` cookie flow and refreshes X's rotating `CreateTweet` query ID.
+The plugin never modifies installed files under `node_modules`.
 
 Start a new Codex task after manual installation and ask on Windows:
 

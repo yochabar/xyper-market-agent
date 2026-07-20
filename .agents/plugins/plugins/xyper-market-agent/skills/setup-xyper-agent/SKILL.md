@@ -121,7 +121,10 @@ Run `monitor` whenever the user asks for campaign or reward status. For continuo
 - `node_missing`: request approval and run `./bootstrap.sh --install-node`.
 - `wallet_needs_unit0`: show the public address and ask the user to fund it.
 - `cookies_missing_required_cookie:*` or `cookies_required_cookie_expired:*`: ask for one fresh local cookie export path.
-- `x_cookie_session_rejected:http_401_during_post`: X rejected the actual publish request; ask for one fresh export from the currently signed-in browser session.
+- `x_cookie_session_rejected:http_401:phase_session_check`: X rejected the cookie session before publishing. Ask for one fresh export from the currently signed-in `x.com` browser session.
+- `x_cookie_session_rejected:http_401:phase_create_tweet`: the read-only session check passed but X rejected `CreateTweet`. Preserve the current cookie file and report this as a posting-protocol failure; do not send the user through repeated exports.
+- `x_post_failed:http_404:phase_create_tweet`: the client already refreshed X's rotating query ID and tried the generic GraphQL endpoint. Preserve state and report a temporary X web API incompatibility.
+- `x_post_automation_rejected:code_226`: X rejected automated posting for this account/session. Do not retry in a loop; ask the user to publish manually or resolve the X account restriction.
 - `x_post_forbidden:http_403`: report that X refused the publish request; do not assume that another cookie export will fix an account restriction.
 - `xyper_service_unavailable:http_5xx`: report a temporary Xyper/Cloudflare outage, preserve the wallet, session, and imported cookies, and retry later. Never blame the cookie file or request repeated exports for this error.
 - Expired Xyper token: scripts refresh wallet authentication automatically.

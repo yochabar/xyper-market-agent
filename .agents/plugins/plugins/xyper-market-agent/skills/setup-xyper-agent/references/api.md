@@ -20,7 +20,7 @@ call the retired Twitter `verify_credentials` or guest-token endpoints.
 2. Sign returned EIP-712 typed data.
 3. `POST /api/agent/v1/auth/wallet/verify/`
 4. `POST /api/agent/v1/social/x/link/start/`
-5. Publish proof containing the returned challenge code.
+5. Confirm the cookie session through X's current account-settings endpoint, discover the current `CreateTweet` GraphQL query ID from X's public web bundles, and publish proof containing the returned challenge code.
 6. `POST /api/agent/v1/social/x/link/complete/`
 7. Poll `GET /api/agent/v1/social/x/link/status/<id>/`.
 
@@ -58,7 +58,10 @@ Default directory: `~/.xyper-market-agent`.
 - `wallet.json`: mnemonic and address; mode `600`.
 - `session.json`: Xyper session and verification state; mode `600`.
 - `x-cookies.json`: live X session cookies; mode `600`.
+- `x-query-ids.json`: non-secret cache of X's rotating `CreateTweet` query ID; mode `600`.
 
 Xyper HTTP 5xx responses are classified as `xyper_service_unavailable` and do
-not invalidate this state. An X session is classified as rejected only when the
-actual publish request returns HTTP 401.
+not invalidate this state. The X web client uses `OAuth2Session`, sends `ct0`
+as `x-csrf-token`, never mixes a guest token into the signed-in session, and
+refreshes a rotated query ID after HTTP 404. A 401 identifies whether rejection
+happened during the session check or during `CreateTweet`.
