@@ -11,11 +11,24 @@ The agent uses Xyper Market production and Unit Zero only.
 ## One-prompt setup on Windows
 
 Install [ChatGPT Desktop](https://chatgpt.com/download/), select **Codex**, open
-any local folder, and send this single prompt:
+any local folder, select **Full access** in the permissions control for the
+initial installation, and send this single prompt:
 
 ```text
 Set up Xyper Market Agent on this Windows computer from
 https://github.com/yochabar/xyper-market-agent.
+
+Before changing plugin configuration or cloning anything, verify that this
+local Codex task can launch powershell.exe and cmd.exe. If executable launch is
+blocked, do not edit config.toml or claim that the plugin is installed. Tell me
+to select Full access, restart ChatGPT Desktop, and retry in a new local task.
+If it remains blocked, guide me to configure [windows] sandbox = "elevated"
+and restart the app.
+
+Check winget.exe, git.exe, node.exe, and npm.cmd. If Git for Windows or Node.js
+LTS is missing and winget works, tell me exactly what will be installed and ask
+for approval before installing it. If winget is unavailable, give me the
+manual installation steps and wait for me to restart ChatGPT Desktop.
 
 Register that repository as a Codex plugin marketplace and install the
 xyper-market-agent plugin. Then use its setup-xyper-agent-windows skill in this
@@ -36,6 +49,26 @@ Codex will perform the technical setup. The user still needs to approve local
 commands, export an `x.com` cookies JSON file, provide its local path, safely
 back up the generated wallet, and fund its public address with enough UNIT0 for
 gas. Those security-sensitive steps are intentionally not silent.
+
+If the executable preflight remains blocked, install the dependencies from a
+normal PowerShell window outside ChatGPT:
+
+```powershell
+winget install --id Git.Git -e --source winget
+winget install --id OpenJS.NodeJS.LTS -e --source winget
+```
+
+Then verify `git --version`, `node --version`, and `npm --version`, restart
+ChatGPT Desktop, select Full access, and run the setup prompt again. Native
+Windows Codex should use the recommended elevated sandbox when available:
+
+```toml
+[windows]
+sandbox = "elevated"
+```
+
+After the initial setup succeeds, the user can switch the desktop permissions
+control back to **Ask for approval** for routine operation.
 
 ## One-prompt setup on macOS
 

@@ -25,6 +25,12 @@ Private state:
 
 The directory ACL permits the current user and SYSTEM only.
 
+Windows host preflight statuses:
+
+- `executable_launch_blocked`: the Codex sandbox cannot start local Windows executables. Select Full access, restart ChatGPT Desktop, and retry in a new local task; use `[windows] sandbox = "elevated"` if the block persists.
+- `dependencies_missing`: Git for Windows or Node.js 20+ is missing and requires approval before `winget` installation.
+- `winget_missing`: install Git for Windows and Node.js LTS outside ChatGPT, then restart the app.
+
 Xyper HTTP 5xx responses are classified as `xyper_service_unavailable` and do
 not invalidate private state. An X session is classified as rejected only when
 the actual publish request returns HTTP 401.
